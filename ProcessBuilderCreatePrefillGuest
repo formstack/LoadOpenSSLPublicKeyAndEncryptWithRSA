@@ -1,0 +1,53 @@
+global without sharing class ProcessBuilderCreatePrefillGuest {
+    @InvocableMethod
+    global static void execute(list<ProcessBuilderPrefillParameters> processBuilderPrefillParameters) {
+        string siteURL = processBuilderPrefillParameters[0].hostedURLPrefix;
+        if (string.isEmpty(siteURL)) {
+            siteURL = null;
+        }
+
+        string formRecordId = processBuilderPrefillParameters[0].formRecordId;
+        string prefillFieldAPIName = processBuilderPrefillParameters[0].prefillFieldAPIName;
+        id objectRecordId = Id.valueOf(processBuilderPrefillParameters[0].id);
+        string objectName = objectRecordId.getSObjectType().getDescribe().getName();
+        
+        list<string> recordIds = new List<string>();
+        for (ProcessBuilderPrefillParameters objParamters : processBuilderPrefillParameters) {
+            recordIds.add(objParamters.id);
+        }
+        
+        map<string,string> prefillUrl = FastFormsUtilities.generatePrefillUrlLink(FormRecordId ,recordIds, siteURL);
+
+        List<SObject> objsToUpdate = new List<SObject>();
+        
+        String soql = 'SELECT ID, '+ PrefillFieldAPIName +' FROM '+ objectName +' WHERE ID IN:recordIds';
+        Map<Id, sObject> objRecordsMap = new Map<Id, sObject>();
+        objRecordsMap.putAll(Database.query(soql));
+        
+        for (string recordId : prefillUrl.keyset()) {
+            if (objRecordsMap.containsKey(recordId)) {
+                sObject o = objRecordsMap.get(recordId);
+                string prefillRecordURL = prefillUrl.get(recordId);
+                o.put(PrefillFieldAPIName, prefillRecordURL);
+                objsToUpdate.add(o);
+            }
+        }
+
+        update objsToUpdate;
+    }
+
+    global class ProcessBuilderPrefillParameters {
+        @InvocableVariable
+        global string sfRecordId;
+
+        @InvocableVariable
+        global string prefillFieldAPIName;
+
+        @InvocableVariable
+        global string formRecordId;
+
+        @InvocableVariable
+        global string hostedURLPrefix;
+    }
+
+}
