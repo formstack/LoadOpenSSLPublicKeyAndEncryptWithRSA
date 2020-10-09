@@ -8,15 +8,15 @@ global without sharing class ProcessBuilderCreatePrefillGuest {
 
         string formRecordId = processBuilderPrefillParameters[0].formRecordId;
         string prefillFieldAPIName = processBuilderPrefillParameters[0].prefillFieldAPIName;
-        id objectRecordId = Id.valueOf(processBuilderPrefillParameters[0].id);
+        id objectRecordId = Id.valueOf(processBuilderPrefillParameters[0].sfRecordId);
         string objectName = objectRecordId.getSObjectType().getDescribe().getName();
         
         list<string> recordIds = new List<string>();
         for (ProcessBuilderPrefillParameters objParamters : processBuilderPrefillParameters) {
-            recordIds.add(objParamters.id);
+            recordIds.add(objParamters.sfRecordId);
         }
         
-        map<string,string> prefillUrl = FastFormsUtilities.generatePrefillUrlLink(FormRecordId ,recordIds, siteURL);
+        map<string,string> prefillUrl = VisualAntidote.FastFormsUtilities.generatePrefillUrlLink(FormRecordId ,recordIds, siteURL);
 
         List<SObject> objsToUpdate = new List<SObject>();
         
