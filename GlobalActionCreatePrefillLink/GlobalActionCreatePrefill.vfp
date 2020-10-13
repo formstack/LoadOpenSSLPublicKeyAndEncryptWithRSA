@@ -1,0 +1,72 @@
+<apex:page controller="GlobalActionCreatePrefillController" >
+     <script type='text/javascript' src='/canvas/sdk/js/publisher.js'/>
+    <apex:includeScript value="{!URLFOR($Resource.VisualAntidote__Base,'base.min.js')}" />
+    <style>
+    .Container{
+        display: inline-grid;
+        padding:10px;
+        width: 100%;
+     }
+	.ForsmtackButton{
+		font-weight: 600;
+		color: #fff;
+		background-color: #33aefd;
+		text-decoration: none;
+		padding: 4px 10px 4px 10px;
+		display: inline-block;
+		font-size: 14px;
+		min-width: 100px;
+		border-radius: 6px;
+		border: solid 1px #33aefd;
+		cursor: pointer;
+	}
+    
+    </style>
+    <apex:form >
+    <div class='Container'>
+        <div class='Container'>
+             <label>  Fomrstack Form ID:    </label>
+            <apex:selectList size="1" value="{!selectedFomstackForm}"  id="selectedFomstackForm">
+          			<apex:selectOptions value="{!formstackForms}" ></apex:selectOptions>
+      		</apex:selectList>
+        </div>
+           <div class='Container'>
+               <label>  Hosted URL Prefix (<i>optional</i>)     </label>
+              <input type="textbox" id="txtHistedSite" placeholder="{!shortUrl}"  />
+             </div>
+                                                        
+           <div class='Container'>
+               <label>  Prefill Link:  </label>
+              <input type="textbox" id="txtprefillLink" value="" readyOnly="readOnly" />
+             </div>
+        <div class='Container'>
+             <input type='button' value='Create Prefill Link' class='ForsmtackButton' id="btnGenerator" />
+        </div>
+			<label id="lblresult"></label>       
+    
+    </div>
+          <script type="text/javascript">
+	var btnGenerator = document.getElementById('btnGenerator');
+
+    btnGenerator.addEventListener('click', function() {
+            console.log('[Generat Prfill url] Start...');
+            var formstackFormId =$("select[id$='selectedFomstackForm']").val(); 
+            var recordId = "{!$CurrentPage.parameters.id}";
+            var shortUrl = $("input[id$='txtHistedSite']").val();
+        
+                Visualforce.remoting.Manager.invokeAction("{!URLENCODE($RemoteAction.GlobalActionCreatePrefillController.createPrefillLink)}",
+                    formstackFormId,recordId, shortUrl,
+                    function (result, event) {
+                        if(event.status){
+                        		document.getElementById('txtprefillLink').value = event.result;
+                            }else{
+                                	document.getElementById('lblresult').innerText = event.message;
+                                }
+                    },
+                    { escape: true }
+                );
+       });
+    </script>
+    </apex:form>
+       
+</apex:page>
