@@ -1,0 +1,60 @@
+/**
+ * The following class it's a workaround to update more than 100K records
+ * Please create a new class in your org and copy PrefillLinkGenerationBatch class
+ * Update the query to get record that need to be updated inside start() method
+ * Run the following script as anonymous code in the org 
+ * PrefillLinkGenerationProcessBatch2 b = new PrefillLinkGenerationProcessBatch2(
+      objectName, // Primary Object name
+      objectFieldURL, // Primary object field Id
+      formRecordID, // Form ID
+      customHostedUrl // 
+    );
+    database.executeBatch(b, 1000); // Note: don't adjust the batch size 
+*/
+
+
+
+public with sharing class PrefillLinkGenerationBatch implements Database.Batchable<sObject>, Database.AllowsCallouts, Database.Stateful {
+  public String objName { get; set; }
+  public String fieldName { get; set; }
+  public String formRecordId { get; set; }
+  public String url { get; set; }
+  public PrefillLinkGenerationProcessBatch2(
+    String oName,
+    String fName,
+    String formRecId,
+    string linkPrefix
+  ) {
+    objName = oName;
+    fieldName = fName;
+    formRecordId = formRecId;
+    url = linkPrefix;
+  }
+
+  public Database.QueryLocator start(Database.BatchableContext BC) {
+  
+    string soqlQuery = 'SELECT ID FROM ' + objName; // Update query to get all records that need to be updated Note: don't add limit
+    return Database.getQueryLocator(soqlQuery);
+  }
+
+  public void execute(Database.BatchableContext BC, List<sObject> scopeObjectList) {
+    /*
+      General- This method will execute N times. N = number of records returned by the query / batch size
+      The size of the scopeObjectList list depends on the batch size specified in the Database.executeBatch method (signature to execute this class methods).
+
+      Purpose of this method:
+      -Loop through each items in scopeObjectList
+     */
+    List<String> idList = new List<string>();
+    if (scopeObjectList != null && scopeObjectList.size() > 0) {
+      for (sObject sObj : scopeObjectList) {
+        idList.add(sObj.Id);
+      }
+      VisualAntidote.FastFormsUtilities.DoUpdateRecords(objName, fieldName, formRecordId, idList, url);
+    }
+  }
+
+  public void finish(Database.BatchableContext BC) {
+    system.debug('FORM_DEBUG Prefill link generation process is completed.');
+  }
+}
